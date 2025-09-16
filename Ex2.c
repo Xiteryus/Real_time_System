@@ -13,46 +13,24 @@ typedef struct {
 
 //ordononceur 
 
-// HPF : priorité fixe donnée par l’utilisateur
-int ordo_HPF(Task *tasks, int nb_tasks) {
+// EDF : priorité dynamique 
+int ordo_EDF(Task *tasks, int nb_tasks) {
     int best = -1;
     for (int i = 0; i < nb_tasks; i++) {
         if (tasks[i].rem > 0) {
-            if (best == -1 || tasks[i].priorite > tasks[best].priorite)
+            if (best == -1 || tasks[i].deadline < tasks[best].deadline) {
                 best = i;
+            }
         }
     }
     return best;
 }
 
-// RM : plus la periode est petit -> plus prioritaire
-int ordo_RM(Task *tasks, int nb_tasks) {
-    int best = -1;
-    for (int i = 0; i < nb_tasks; i++) {
-        if (tasks[i].rem > 0) {
-            if (best == -1 || tasks[i].periode < tasks[best].periode)
-                best = i;
-        }
-    }
-    return best;
-}
-
-// DM : plus la deadline est petit -> plus prioritaire
-int ordo_DM(Task *tasks, int nb_tasks) {
-    int best = -1;
-    for (int i = 0; i < nb_tasks; i++) {
-        if (tasks[i].rem > 0) {
-            if (best == -1 || tasks[i].echeance < tasks[best].echeance)
-                best = i;
-        }
-    }
-    return best;
-}
 
 // SIMULATION
 
 void simulate(Task *tasks, int nb_tasks, int (*scheduler)(Task*, int), const char *name) {
-    printf("\nSimulation %s \n", name);
+    printf("\nSimulation %s :\n", name);
 
     // Initialisation
     for (int i = 0; i < nb_tasks; i++) {
@@ -78,6 +56,7 @@ void simulate(Task *tasks, int nb_tasks, int (*scheduler)(Task*, int), const cha
                 tasks[i].rem = tasks[i].duree;
                 tasks[i].deadline = t + tasks[i].echeance;
                 tasks[i].next_release += tasks[i].periode;
+
             }
         }
 
@@ -121,16 +100,11 @@ int main(void) {
         printf("Durée (C) : "); scanf("%d", &tasks[i].duree);
         printf("Échéance (D) : "); scanf("%d", &tasks[i].echeance);
         printf("Période (P) : "); scanf("%d", &tasks[i].periode);
-        printf("Priorité : "); scanf("%d", &tasks[i].priorite);
+        printf("Priorité : (pas utile pour EDF)"); scanf("%d", &tasks[i].priorite);
     }
 
     // Lancer plusieurs simulations avec les mêmes tâches
-    printf("Quels ordononeur voulez-vous choisir ? (0 - HPF; 1 - RM; 2 - DM)");
-    scanf("%d", &ordo);
-    if(ordo == 0)
-        simulate(tasks, nb_tasks, ordo_HPF, "HPF");
-    else{ if(ordo==1)simulate(tasks, nb_tasks, ordo_RM,  "Rate Monotonic (RM)");
-    else {if(ordo==2)simulate(tasks, nb_tasks, ordo_DM,  "Deadline Monotonic (DM)");}} 
+    simulate(tasks,nb_tasks,ordo_EDF,"Earliest deadline first (EDF)");
     
 
     free(tasks);
